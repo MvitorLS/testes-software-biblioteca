@@ -7,5 +7,5 @@ MULTA_MAXIMA = 50
 
 def calcular_multa(emprestimo, devolucao):
     vencimento = emprestimo + timedelta(days=PRAZO_DIAS)
-    atraso = (devolucao - vencimento).days
-    return min(max(atraso, 0) * MULTA_POR_DIA, MULTA_MAXIMA)
+    dias_atraso = max((devolucao - vencimento).days, 0)
+    return min(dias_atraso * MULTA_POR_DIA, MULTA_MAXIMA)
