@@ -64,3 +64,65 @@ Um erro gera um defeito, e o defeito só vira falha quando aquele trecho é exec
 | Desempenho | Muitos empréstimos simultâneos no horário de pico (ex.: início do semestre). |
 | Usabilidade | Tela do balcão: mensagem clara quando o empréstimo é negado e o motivo. |
 | Segurança | Só funcionário autorizado pode registrar devolução e baixar multa (evita perdão indevido de multa). |
+
+# 3. Parte 2 – Projeto de casos de teste
+
+## 3.1 Particionamento de equivalência e valor limite
+
+**Campo 1 – dias de atraso na devolução (RN1, RN2, RN3).** Os "dias após o empréstimo" são contados a partir da data do empréstimo, e o atraso é esse valor menos 7.
+
+| Partição | Atraso (dias) | Multa esperada |
+|----------|---------------|----------------|
+| P1 – no prazo | ≤ 0 | R$ 0,00 |
+| P2 – atraso proporcional | 1 a 24 | 2 × atraso |
+| P3 – teto atingido | ≥ 25 | R$ 50,00 |
+
+Valores limite escolhidos (dias após o empréstimo → atraso → multa): 6 → −1 → 0; **7 → 0 → 0**; **8 → 1 → 2**; **31 → 24 → 48**; **32 → 25 → 50**; 33 → 26 → 50. Foram escolhidos porque erros de "um a mais/um a menos" costumam aparecer nas fronteiras entre as partições (último dia sem multa, primeiro dia com multa, e o dia em que o teto é atingido).
+
+**Campo 2 – quantidade de livros emprestados ao usuário (RN4).**
+
+| Partição | Livros ativos | Resultado |
+|----------|---------------|-----------|
+| P1 – dentro do limite | 0 a 2 | Empréstimo permitido |
+| P2 – limite atingido | 3 | Empréstimo negado |
+
+Valores limite: **2** (permite o 3º livro) e **3** (nega o 4º livro).
+
+## 3.2 Tabela de decisão (concessão do empréstimo)
+
+Condições: C1 = usuário sem multa pendente; C2 = usuário com menos de 3 livros; C3 = livro com exemplar disponível.
+
+| Regra | C1 | C2 | C3 | Ação |
+|-------|----|----|----|------|
+| R1 | S | S | S | **Emprestar** |
+| R2 | S | S | N | Negar (sem exemplar) |
+| R3 | S | N | S | Negar (limite de 3 livros) |
+| R4 | S | N | N | Negar |
+| R5 | N | S | S | Negar (multa pendente) |
+| R6 | N | S | N | Negar |
+| R7 | N | N | S | Negar |
+| R8 | N | N | N | Negar |
+
+Apenas R1 permite o empréstimo. R2, R3 e R5 estão cobertas por testes automatizados. As demais combinações negam por mais de um motivo.
+
+## 3.3 Casos de teste formais
+
+| ID | Pré-condição | Passos | Dados de entrada | Resultado esperado | Prior. |
+|----|--------------|--------|------------------|--------------------|--------|
+| CT01 | Livro emprestado em 01/01 | Devolver no dia 7 | Devolução 08/01 | Multa R$ 0,00 | Alta |
+| CT02 | Livro emprestado em 01/01 | Devolver no dia 6 | Devolução 07/01 | Multa R$ 0,00 | Média |
+| CT03 | Livro emprestado em 01/01 | Devolver com 1 dia de atraso | Devolução 09/01 | Multa R$ 2,00 | Alta |
+| CT04 | Livro emprestado em 01/10 | Devolver com 3 dias de atraso | Devolução 11/10 | Multa R$ 6,00 | Alta |
+| CT05 | Livro emprestado em 01/01 | Devolver com 24 dias de atraso | Devolução 01/02 | Multa R$ 48,00 | Média |
+| CT06 | Livro emprestado em 01/01 | Devolver com 25 dias de atraso | Devolução 02/02 | Multa R$ 50,00 (teto) | Alta |
+| CT07 | Livro emprestado em 01/01 | Devolver quase um ano depois | Devolução 31/12 | Multa R$ 50,00 (teto) | Alta |
+| CT08 | Usuário sem pendências; 1 exemplar | Emprestar o livro L1 | usuário "ana", L1 | Empréstimo registrado (1 ativo) | Alta |
+| CT09 | "ana" com 3 livros | Tentar emprestar o 4º | L4 | Negado (limite de 3) | Alta |
+| CT10 | L1 com 0 exemplares livres | "bia" tenta emprestar L1 | "bia", L1 | Negado (sem exemplar) | Alta |
+| CT11 | "ana" com multa de R$ 6,00 | Tentar emprestar L2 | "ana", L2 | Negado (multa pendente) | Alta |
+| CT12 | "ana" com multa de R$ 6,00 | Pagar a multa e emprestar L2 | "ana", L2 | Empréstimo permitido | Média |
+| CT13 | Notificador ativo | Devolver com 3 dias de atraso | "ana", L1 | Aviso enviado: ("ana", R$ 6,00) | Média |
+| CT14 | Notificador ativo | Devolver no prazo | "ana", L1 | Nenhum aviso enviado | Baixa |
+| CT15 | "ana" com 2 livros | Emprestar o 3º | L3 | Empréstimo permitido (limite não atingido) | Média |
+
+Todos os casos serão automatizados em `test_biblioteca.py` (CT01–CT03 e CT05–CT06 pelo teste parametrizado `test_valores_limite_da_multa`).
