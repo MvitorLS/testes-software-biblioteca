@@ -1,9 +1,10 @@
 from datetime import timedelta
 
+PRAZO_DIAS = 7
+MULTA_POR_DIA = 2
+
 
 def calcular_multa(emprestimo, devolucao):
-    vencimento = emprestimo + timedelta(days=7)
+    vencimento = emprestimo + timedelta(days=PRAZO_DIAS)
     atraso = (devolucao - vencimento).days
-    if atraso <= 0:
-        return 0
-    return atraso * 2
+    return max(atraso, 0) * MULTA_POR_DIA
