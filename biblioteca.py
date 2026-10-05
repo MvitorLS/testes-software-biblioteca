@@ -3,6 +3,7 @@ from datetime import timedelta
 PRAZO_DIAS = 7
 MULTA_POR_DIA = 2
 MULTA_MAXIMA = 50
+LIMITE_LIVROS = 3
 
 
 def calcular_multa(emprestimo, devolucao):
@@ -30,8 +31,8 @@ class Biblioteca:
     def emprestar(self, usuario, livro, data):
         if self.multas.get(usuario, 0) > 0:
             raise EmprestimoNegado("usuario com multa pendente")
-        if self.emprestimos_ativos(usuario) >= 3:
-            raise EmprestimoNegado("limite de 3 livros atingido")
+        if self.emprestimos_ativos(usuario) >= LIMITE_LIVROS:
+            raise EmprestimoNegado(f"limite de {LIMITE_LIVROS} livros atingido")
         if self.exemplares.get(livro, 0) < 1:
             raise EmprestimoNegado("livro sem exemplar disponivel")
         self.exemplares[livro] -= 1
