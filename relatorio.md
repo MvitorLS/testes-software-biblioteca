@@ -126,3 +126,56 @@ Apenas R1 permite o empréstimo. R2, R3 e R5 estão cobertas por testes automati
 | CT15 | "ana" com 2 livros | Emprestar o 3º | L3 | Empréstimo permitido (limite não atingido) | Média |
 
 Todos os casos serão automatizados em `test_biblioteca.py` (CT01–CT03 e CT05–CT06 pelo teste parametrizado `test_valores_limite_da_multa`).
+
+# 4. Parte 3 – TDD e automação
+
+Linguagem: **Python 3.14**, framework **pytest**, cobertura com **pytest-cov** (coverage.py). Código em `biblioteca.py`, testes em `test_biblioteca.py`.
+
+## 4.1 Ciclos Red-Green-Refactor
+
+Cada etapa virou um commit no repositório git (`git log --oneline --reverse`, do mais antigo ao mais novo, apenas os commits de código):
+
+```
+365969d test: red - calculo de multa por atraso
+030e541 feat: green - multa de R$ 2,00 por dia de atraso
+a43b60d refactor: extrai constantes de prazo e multa
+9943459 test: red - teto da multa
+30b13a2 feat: green - teto de R$ 50,00 na multa
+2715822 refactor: nomeia dias de atraso e simplifica calculo
+5f4a0ea test: red - regras de emprestimo
+c278c69 feat: green - regras de emprestimo e devolucao
+7c9f261 refactor: extrai constante LIMITE_LIVROS
+b46a015 test: red - pagamento de multa, notificador e valores limite
+3e6eb96 feat: green - pagamento de multa e notificacao
+d6e7ccf refactor: separa validacao do emprestimo em metodo proprio
+```
+
+| Ciclo | Red (teste que falha) | Green (código mínimo) | Refactor |
+|-------|-----------------------|-----------------------|----------|
+| 1 | `calcular_multa` não existia (`ModuleNotFoundError`). | `atraso * 2`, 0 se não houver atraso. | Constantes `PRAZO_DIAS` e `MULTA_POR_DIA` no lugar de números soltos. |
+| 2 | Teste do teto: obtido R$ 714 (sem teto) e esperado R$ 50. | `min(multa, 50)`. | Variável `dias_atraso`; a fórmula passou a ter nomes que explicam a regra. |
+| 3 | 5 testes de regras de empréstimo (classe `Biblioteca` inexistente). | Classe `Biblioteca` com `emprestar`, `devolver` e `EmprestimoNegado`. | Constante `LIMITE_LIVROS` e mensagem de erro derivada dela. |
+| 4 | 3 testes falhando: `pagar_multa` inexistente e construtor sem notificador. | `pagar_multa` e chamada a `notificador.avisar`. | As 3 validações de `emprestar` foram para o método `_validar_emprestimo`. |
+
+No ciclo 4, o teste parametrizado dos valores-limite já nasceu passando, porque `calcular_multa` existia desde o ciclo 1. Ele entrou junto para documentar as fronteiras.
+
+## 4.2 Testes automatizados
+
+Total: **17 testes unitários** (12 funções, sendo uma parametrizada com 6 valores), cobrindo as regras RN1–RN6. Recursos exigidos:
+
+- **Testes parametrizados:** `test_valores_limite_da_multa` com `@pytest.mark.parametrize`, 6 pares (dias → multa).
+- **Mock:** `Mock()` no lugar do notificador, verificando com `assert_called_once_with("ana", 6)` e `assert_not_called()`. Isso evita depender de e-mail/SMS real.
+
+Para rodar: `pytest -v`.
+
+## 4.3 Cobertura
+
+Comando: `pytest --cov=biblioteca --cov-branch`
+
+```
+Name            Stmts   Miss Branch BrPart  Cover
+-------------------------------------------------
+biblioteca.py      42      0      8      0   100%
+```
+
+Comentário: 100% das linhas e dos 8 desvios (branches) foram executados pelos testes. Isso significa que todo o código foi percorrido, mas **não** garante que o sistema esteja livre de defeitos. Cobertura mede o que foi executado, não se as verificações (asserts) são boas o bastante nem se faltam regras. Os defeitos da seção 5.2 mostram isso: o defeito do limite de livros só foi detectado porque existe um teste escrito exatamente com o valor da fronteira.
