@@ -237,3 +237,31 @@ Ambos os defeitos foram detectados pelos testes, o que mostra o valor dos valore
 | JMeter | Testes de desempenho | Simula centenas de usuários ao mesmo tempo e gera gráficos de tempo de resposta. | Interface antiga e curva de aprendizado maior. |
 
 Para o módulo da biblioteca eu usaria: **Cypress** para a interface (fluxo do balcão de empréstimo), **Postman** para a API (regras RN1–RN6 via requisições) e **JMeter** para o desempenho (pico de empréstimos no início do semestre).
+
+# 6. Parte 5 – Conclusão
+
+## 6.1 Análise crítica
+
+- Todas as 6 regras de negócio ficaram cobertas, com 17 testes aprovados e 100% de cobertura de linhas e branches.
+- O TDD obrigou a pensar primeiro no comportamento esperado. Cada ciclo começou com um teste falhando, o que confirma que o teste realmente verifica algo antes de existir o código.
+- Os 2 defeitos inseridos foram detectados, mas a cobertura de 100% sozinha não provaria isso. O que pegou os defeitos foram os testes de valor limite.
+
+## 6.2 Limitações
+
+- Os dados ficam só em memória (sem banco de dados) e não há identificação real de usuários.
+- Prazo em dias corridos, sem tratar feriados e fins de semana.
+- O notificador é um mock; o envio real de mensagem não foi testado.
+- A multa pendente é tratada como tudo ou nada (não há pagamento parcial).
+- Não foi feito teste de desempenho nem de interface, apenas descritos como planejados.
+
+## 6.3 Melhorias
+
+- Persistir dados em banco e criar testes de integração reais.
+- Incluir renovação e reserva de livros, com novas regras e testes.
+- Usar teste de mutação (ex.: `mutmut`) para medir a qualidade dos testes de forma automática, em vez de injetar defeitos manualmente.
+- Receber a data atual por um relógio injetável, para facilitar testes de datas.
+- Executar os testes automaticamente a cada commit (integração contínua).
+
+# 7. Anexos
+
+Repositório: https://github.com/MvitorLS/testes-software-biblioteca (branch `feat/aproveitamento`), com `biblioteca.py`, `test_biblioteca.py`, o histórico git dos ciclos TDD e este relatório.
