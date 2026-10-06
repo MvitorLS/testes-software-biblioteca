@@ -179,3 +179,61 @@ biblioteca.py      42      0      8      0   100%
 ```
 
 Comentário: 100% das linhas e dos 8 desvios (branches) foram executados pelos testes. Isso significa que todo o código foi percorrido, mas **não** garante que o sistema esteja livre de defeitos. Cobertura mede o que foi executado, não se as verificações (asserts) são boas o bastante nem se faltam regras. Os defeitos da seção 5.2 mostram isso: o defeito do limite de livros só foi detectado porque existe um teste escrito exatamente com o valor da fronteira.
+
+# 5. Parte 4 – Execução, defeitos e ferramentas
+
+## 5.1 Execução dos testes
+
+Resultado da execução completa (`pytest -v`): **17 aprovados, 0 reprovados, 0 bloqueados**.
+
+| Teste | Caso | Resultado |
+|-------|------|-----------|
+| `test_sem_atraso_nao_tem_multa` | CT01 | Aprovado |
+| `test_atraso_de_3_dias_gera_multa_de_6_reais` | CT04 | Aprovado |
+| `test_multa_nao_passa_do_teto_de_50_reais` | CT07 | Aprovado |
+| `test_usuario_sem_pendencias_pode_emprestar` | CT08 | Aprovado |
+| `test_empresta_terceiro_livro_dentro_do_limite` | CT15 | Aprovado |
+| `test_nao_empresta_quarto_livro` | CT09 | Aprovado |
+| `test_nao_empresta_livro_sem_exemplar` | CT10 | Aprovado |
+| `test_nao_empresta_com_multa_pendente` | CT11 | Aprovado |
+| `test_pagar_multa_libera_novo_emprestimo` | CT12 | Aprovado |
+| `test_devolucao_com_multa_notifica_usuario` | CT13 | Aprovado |
+| `test_devolucao_no_prazo_nao_notifica` | CT14 | Aprovado |
+| `test_valores_limite_da_multa[6-0]` | CT02 | Aprovado |
+| `test_valores_limite_da_multa[7-0]` | CT01 | Aprovado |
+| `test_valores_limite_da_multa[8-2]` | CT03 | Aprovado |
+| `test_valores_limite_da_multa[31-48]` | CT05 | Aprovado |
+| `test_valores_limite_da_multa[32-50]` | CT06 | Aprovado |
+| `test_valores_limite_da_multa[33-50]` | CT06 | Aprovado |
+
+## 5.2 Defeitos introduzidos propositalmente
+
+Os defeitos foram inseridos em uma cópia do código (o repositório continua correto) e os 17 testes foram executados contra cada cópia.
+
+**BUG-01 – Sistema permite emprestar o 4º livro**
+
+- **Defeito introduzido:** `if self.emprestimos_ativos(usuario) >= LIMITE_LIVROS` trocado por `>`.
+- **Passos para reproduzir:** cadastrar 4 livros; emprestar L1, L2 e L3 para "ana"; tentar emprestar L4 para "ana".
+- **Resultado esperado:** `EmprestimoNegado` (limite de 3 livros).
+- **Resultado obtido:** o empréstimo é feito. O teste `test_nao_empresta_quarto_livro` falhou com `DID NOT RAISE EmprestimoNegado` (1 reprovado, 16 aprovados).
+- **Severidade:** Média (o acervo é afetado, mas não há perda de dados). **Prioridade:** Média.
+
+**BUG-02 – Multa calculada com prazo de 8 dias**
+
+- **Defeito introduzido:** `PRAZO_DIAS = 7` trocado por `8`.
+- **Passos para reproduzir:** emprestar um livro em 01/10/2026 e devolver em 11/10/2026.
+- **Resultado esperado:** multa de R$ 6,00 (3 dias de atraso).
+- **Resultado obtido:** multa de R$ 4,00 (`assert 4 == 6`). O teste de notificação também falhou (`Expected: avisar('ana', 6)`, `Actual: avisar('ana', 4)`). Ao todo, 5 testes reprovaram (os valores 8, 31 e 32 dias, o de 3 dias e o de notificação) e 12 aprovaram.
+- **Severidade:** Alta (o usuário é cobrado a menos, perda financeira). **Prioridade:** Alta.
+
+Ambos os defeitos foram detectados pelos testes, o que mostra o valor dos valores-limite e da regressão automatizada. O código do repositório continua passando em 17/17.
+
+## 5.3 Comparação de ferramentas
+
+| Ferramenta | Foco | Pontos fortes | Pontos fracos |
+|------------|------|---------------|----------------|
+| Cypress (ou Selenium) | Testes de interface web | Simula o clique do bibliotecário no balcão; Cypress é mais simples de configurar. | Testes mais lentos e frágeis a mudanças de tela. |
+| Postman | Testes de API | Fácil de montar requisições (`POST /emprestimos`, `POST /devolucoes`) e validar status e JSON. | Não mede carga pesada. |
+| JMeter | Testes de desempenho | Simula centenas de usuários ao mesmo tempo e gera gráficos de tempo de resposta. | Interface antiga e curva de aprendizado maior. |
+
+Para o módulo da biblioteca eu usaria: **Cypress** para a interface (fluxo do balcão de empréstimo), **Postman** para a API (regras RN1–RN6 via requisições) e **JMeter** para o desempenho (pico de empréstimos no início do semestre).
