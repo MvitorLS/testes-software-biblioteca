@@ -17,7 +17,8 @@ class EmprestimoNegado(Exception):
 
 
 class Biblioteca:
-    def __init__(self):
+    def __init__(self, notificador=None):
+        self.notificador = notificador
         self.exemplares = {}
         self.emprestimos = {}
         self.multas = {}
@@ -43,4 +44,9 @@ class Biblioteca:
         self.exemplares[livro] += 1
         multa = calcular_multa(emprestimo, data)
         self.multas[usuario] = self.multas.get(usuario, 0) + multa
+        if multa > 0 and self.notificador:
+            self.notificador.avisar(usuario, multa)
         return multa
+
+    def pagar_multa(self, usuario):
+        self.multas[usuario] = 0
