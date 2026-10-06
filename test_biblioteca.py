@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import date, timedelta
+from unittest.mock import Mock
 
 import pytest
 
@@ -58,3 +59,42 @@ def test_nao_empresta_com_multa_pendente():
     biblioteca.devolver("ana", "L1", date(2026, 10, 11))
     with pytest.raises(EmprestimoNegado):
         biblioteca.emprestar("ana", "L2", date(2026, 10, 12))
+
+
+def test_pagar_multa_libera_novo_emprestimo():
+    biblioteca = Biblioteca()
+    biblioteca.adicionar_livro("L1", exemplares=1)
+    biblioteca.adicionar_livro("L2", exemplares=1)
+    biblioteca.emprestar("ana", "L1", date(2026, 10, 1))
+    biblioteca.devolver("ana", "L1", date(2026, 10, 11))
+    biblioteca.pagar_multa("ana")
+    biblioteca.emprestar("ana", "L2", date(2026, 10, 12))
+    assert biblioteca.emprestimos_ativos("ana") == 1
+
+
+def test_devolucao_com_multa_notifica_usuario():
+    notificador = Mock()
+    biblioteca = Biblioteca(notificador)
+    biblioteca.adicionar_livro("L1", exemplares=1)
+    biblioteca.emprestar("ana", "L1", date(2026, 10, 1))
+    biblioteca.devolver("ana", "L1", date(2026, 10, 11))
+    notificador.avisar.assert_called_once_with("ana", 6)
+
+
+def test_devolucao_no_prazo_nao_notifica():
+    notificador = Mock()
+    biblioteca = Biblioteca(notificador)
+    biblioteca.adicionar_livro("L1", exemplares=1)
+    biblioteca.emprestar("ana", "L1", date(2026, 10, 1))
+    biblioteca.devolver("ana", "L1", date(2026, 10, 8))
+    notificador.avisar.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "dias_apos_emprestimo, esperado",
+    [(6, 0), (7, 0), (8, 2), (31, 48), (32, 50), (33, 50)],
+)
+def test_valores_limite_da_multa(dias_apos_emprestimo, esperado):
+    emprestimo = date(2026, 1, 1)
+    devolucao = emprestimo + timedelta(days=dias_apos_emprestimo)
+    assert calcular_multa(emprestimo, devolucao) == esperado
