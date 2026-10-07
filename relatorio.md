@@ -124,6 +124,7 @@ Apenas R1 permite o empréstimo. R2, R3 e R5 estão cobertas por testes automati
 | CT13 | Notificador ativo | Devolver com 3 dias de atraso | "ana", L1 | Aviso enviado: ("ana", R$ 6,00) | Média |
 | CT14 | Notificador ativo | Devolver no prazo | "ana", L1 | Nenhum aviso enviado | Baixa |
 | CT15 | "ana" com 2 livros | Emprestar o 3º | L3 | Empréstimo permitido (limite não atingido) | Média |
+| CT16 | "ana" com multa pendente | "bia" (sem multa) empresta L2 | "bia", L2 | Empréstimo permitido (a multa é por usuário) | Média |
 
 Todos os casos serão automatizados em `test_biblioteca.py` (CT01–CT03 e CT05–CT06 pelo teste parametrizado `test_valores_limite_da_multa`).
 
@@ -148,6 +149,7 @@ c278c69 feat: green - regras de emprestimo e devolucao
 b46a015 test: red - pagamento de multa, notificador e valores limite
 3e6eb96 feat: green - pagamento de multa e notificacao
 d6e7ccf refactor: separa validacao do emprestimo em metodo proprio
+c34d82a test: multa de um usuario nao bloqueia outro
 ```
 
 | Ciclo | Red (teste que falha) | Green (código mínimo) | Refactor |
@@ -159,9 +161,11 @@ d6e7ccf refactor: separa validacao do emprestimo em metodo proprio
 
 No ciclo 4, o teste parametrizado dos valores-limite já nasceu passando, porque `calcular_multa` existia desde o ciclo 1. Ele entrou junto para documentar as fronteiras.
 
+Depois do ciclo 4, foi acrescentado o teste `test_multa_de_um_usuario_nao_bloqueia_outro` (CT16), que já nasceu passando: ele cobre uma lacuna, garantindo que a multa de um usuário não bloqueia outro.
+
 ## 4.2 Testes automatizados
 
-Total: **17 testes unitários** (12 funções, sendo uma parametrizada com 6 valores), cobrindo as regras RN1–RN6. Recursos exigidos:
+Total: **18 testes unitários** (13 funções, sendo uma parametrizada com 6 valores), cobrindo as regras RN1–RN6. Recursos exigidos:
 
 - **Testes parametrizados:** `test_valores_limite_da_multa` com `@pytest.mark.parametrize`, 6 pares (dias → multa).
 - **Mock:** `Mock()` no lugar do notificador, verificando com `assert_called_once_with("ana", 6)` e `assert_not_called()`. Isso evita depender de e-mail/SMS real.
@@ -184,7 +188,7 @@ Comentário: 100% das linhas e dos 8 desvios (branches) foram executados pelos t
 
 ## 5.1 Execução dos testes
 
-Resultado da execução completa (`pytest -v`): **17 aprovados, 0 reprovados, 0 bloqueados**.
+Resultado da execução completa (`pytest -v`): **18 aprovados, 0 reprovados, 0 bloqueados**.
 
 | Teste | Caso | Resultado |
 |-------|------|-----------|
@@ -193,6 +197,7 @@ Resultado da execução completa (`pytest -v`): **17 aprovados, 0 reprovados, 0 
 | `test_multa_nao_passa_do_teto_de_50_reais` | CT07 | Aprovado |
 | `test_usuario_sem_pendencias_pode_emprestar` | CT08 | Aprovado |
 | `test_empresta_terceiro_livro_dentro_do_limite` | CT15 | Aprovado |
+| `test_multa_de_um_usuario_nao_bloqueia_outro` | CT16 | Aprovado |
 | `test_nao_empresta_quarto_livro` | CT09 | Aprovado |
 | `test_nao_empresta_livro_sem_exemplar` | CT10 | Aprovado |
 | `test_nao_empresta_com_multa_pendente` | CT11 | Aprovado |
@@ -208,14 +213,14 @@ Resultado da execução completa (`pytest -v`): **17 aprovados, 0 reprovados, 0 
 
 ## 5.2 Defeitos introduzidos propositalmente
 
-Os defeitos foram inseridos em uma cópia do código (o repositório continua correto) e os 17 testes foram executados contra cada cópia.
+Os defeitos foram inseridos em uma cópia do código (o repositório continua correto) e os 18 testes foram executados contra cada cópia.
 
 **BUG-01 – Sistema permite emprestar o 4º livro**
 
 - **Defeito introduzido:** `if self.emprestimos_ativos(usuario) >= LIMITE_LIVROS` trocado por `>`.
 - **Passos para reproduzir:** cadastrar 4 livros; emprestar L1, L2 e L3 para "ana"; tentar emprestar L4 para "ana".
 - **Resultado esperado:** `EmprestimoNegado` (limite de 3 livros).
-- **Resultado obtido:** o empréstimo é feito. O teste `test_nao_empresta_quarto_livro` falhou com `DID NOT RAISE EmprestimoNegado` (1 reprovado, 16 aprovados).
+- **Resultado obtido:** o empréstimo é feito. O teste `test_nao_empresta_quarto_livro` falhou com `DID NOT RAISE EmprestimoNegado` (1 reprovado, 17 aprovados).
 - **Severidade:** Média (o acervo é afetado, mas não há perda de dados). **Prioridade:** Média.
 
 **BUG-02 – Multa calculada com prazo de 8 dias**
@@ -223,10 +228,10 @@ Os defeitos foram inseridos em uma cópia do código (o repositório continua co
 - **Defeito introduzido:** `PRAZO_DIAS = 7` trocado por `8`.
 - **Passos para reproduzir:** emprestar um livro em 01/10/2026 e devolver em 11/10/2026.
 - **Resultado esperado:** multa de R$ 6,00 (3 dias de atraso).
-- **Resultado obtido:** multa de R$ 4,00 (`assert 4 == 6`). O teste de notificação também falhou (`Expected: avisar('ana', 6)`, `Actual: avisar('ana', 4)`). Ao todo, 5 testes reprovaram (os valores 8, 31 e 32 dias, o de 3 dias e o de notificação) e 12 aprovaram.
+- **Resultado obtido:** multa de R$ 4,00 (`assert 4 == 6`). O teste de notificação também falhou (`Expected: avisar('ana', 6)`, `Actual: avisar('ana', 4)`). Ao todo, 5 testes reprovaram (os valores 8, 31 e 32 dias, o de 3 dias e o de notificação) e 13 aprovaram.
 - **Severidade:** Alta (o usuário é cobrado a menos, perda financeira). **Prioridade:** Alta.
 
-Ambos os defeitos foram detectados pelos testes, o que mostra o valor dos valores-limite e da regressão automatizada. O código do repositório continua passando em 17/17.
+Ambos os defeitos foram detectados pelos testes, o que mostra o valor dos valores-limite e da regressão automatizada. O código do repositório continua passando em 18/18.
 
 ## 5.3 Comparação de ferramentas
 
@@ -242,7 +247,7 @@ Para o módulo da biblioteca eu usaria: **Cypress** para a interface (fluxo do b
 
 ## 6.1 Análise crítica
 
-- Todas as 6 regras de negócio ficaram cobertas, com 17 testes aprovados e 100% de cobertura de linhas e branches.
+- Todas as 6 regras de negócio ficaram cobertas, com 18 testes aprovados e 100% de cobertura de linhas e branches.
 - O TDD obrigou a pensar primeiro no comportamento esperado. Cada ciclo começou com um teste falhando, o que confirma que o teste realmente verifica algo antes de existir o código.
 - Os 2 defeitos inseridos foram detectados, mas a cobertura de 100% sozinha não provaria isso. O que pegou os defeitos foram os testes de valor limite.
 
