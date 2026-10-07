@@ -148,7 +148,7 @@ Linguagem: **Python 3.14**, framework **pytest**, cobertura com **pytest-cov** (
 
 ## 4.1 Ciclos Red-Green-Refactor
 
-O ciclo Red-Green-Refactor segue a prática descrita por Beck (2002). Cada etapa virou um commit no repositório git (`git log --oneline --reverse`, do mais antigo ao mais novo, apenas os commits de código):
+O ciclo Red-Green-Refactor segue a prática descrita por Beck (2002) e tem três passos: **Red** (escrever um teste de uma regra e ver ele falhar, porque o código ainda não existe), **Green** (escrever o código mínimo para o teste passar) e **Refactor** (melhorar nomes e estrutura sem mudar o comportamento, mantendo os testes passando). Cada etapa virou um commit no repositório git (`git log --oneline --reverse`, do mais antigo ao mais novo, apenas os commits de código):
 
 ```
 365969d test: red - calculo de multa por atraso
@@ -168,10 +168,10 @@ c34d82a test: multa de um usuario nao bloqueia outro
 
 | Ciclo | Red (teste que falha) | Green (código mínimo) | Refactor |
 |-------|-----------------------|-----------------------|----------|
-| 1 | `calcular_multa` não existia (`ModuleNotFoundError`). | `atraso * 2`, 0 se não houver atraso. | Constantes `PRAZO_DIAS` e `MULTA_POR_DIA` no lugar de números soltos. |
-| 2 | Teste do teto: obtido R$ 714 (sem teto) e esperado R$ 50. | `min(multa, 50)`. | Variável `dias_atraso`; a fórmula passou a ter nomes que explicam a regra. |
-| 3 | 5 testes de regras de empréstimo (classe `Biblioteca` inexistente). | Classe `Biblioteca` com `emprestar`, `devolver` e `EmprestimoNegado`. | Constante `LIMITE_LIVROS` e mensagem de erro derivada dela. |
-| 4 | 3 testes falhando: `pagar_multa` inexistente e construtor sem notificador. | `pagar_multa` e chamada a `notificador.avisar`. | As 3 validações de `emprestar` foram para o método `_validar_emprestimo`. |
+| 1 (RN1, RN2) | `calcular_multa` não existia (`ModuleNotFoundError`). | `atraso * 2`, 0 se não houver atraso. | Constantes `PRAZO_DIAS` e `MULTA_POR_DIA` no lugar de números soltos. |
+| 2 (RN3) | Teste do teto: obtido R$ 714 (sem teto) e esperado R$ 50. | `min(multa, 50)`. | Variável `dias_atraso`; a fórmula passou a ter nomes que explicam a regra. |
+| 3 (RN4, RN5, RN6) | 5 testes de regras de empréstimo (classe `Biblioteca` inexistente). | Classe `Biblioteca` com `emprestar`, `devolver` e `EmprestimoNegado`. | Constante `LIMITE_LIVROS` e mensagem de erro derivada dela. |
+| 4 (RN5, notificação) | 3 testes falhando: `pagar_multa` inexistente e construtor sem notificador. | `pagar_multa` e chamada a `notificador.avisar`. | As 3 validações de `emprestar` foram para o método `_validar_emprestimo`. |
 
 No ciclo 4, o teste parametrizado dos valores-limite já nasceu passando, porque `calcular_multa` existia desde o ciclo 1. Ele entrou junto para documentar as fronteiras.
 
