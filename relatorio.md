@@ -1,12 +1,24 @@
 ---
 title: "Aproveitamento de Conhecimentos – Testes de Software"
 subtitle: "Módulo: Empréstimo e devolução de livros com multa por atraso"
-author: "Aluno: Matheus Vitor — Bacharelado em Ciências da Computação"
-date: "Prof. Gerson Peres — Entrega: 08/10/2026"
+author: "Matheus Vitor — Bacharelado em Ciências da Computação"
+date: "Disciplina: Testes de Software · Prof. Gerson Peres · Entrega: 08/10/2026"
 lang: pt-BR
+toc: true
+toc-title: "Sumário"
+toc-depth: 2
+classoption: titlepage
 geometry: margin=2.5cm
 fontsize: 11pt
 ---
+
+```{=latex}
+\newpage
+```
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 
 # 1. Cenário e regras de negócio
 
@@ -29,7 +41,7 @@ Módulo de um sistema fictício de biblioteca: o usuário pega livros emprestado
 - **Defeito (bug):** o resultado do erro dentro do código, ou seja, a linha `if emprestimos > LIMITE_LIVROS`.
 - **Falha:** o comportamento errado visto na execução. O sistema empresta o 4º livro ao mesmo usuário, violando a RN4.
 
-Um erro gera um defeito, e o defeito só vira falha quando aquele trecho é executado com os dados certos.
+Um erro gera um defeito, e o defeito só vira falha quando aquele trecho é executado com os dados certos (ISTQB, 2023).
 
 - **Verificação** ("estamos construindo o sistema *corretamente*?"): conferir se o código segue as regras RN1 a RN6, por meio de revisão e testes automatizados. Exemplo: o teste que confere que 3 dias de atraso resultam em R$ 6,00.
 - **Validação** ("estamos construindo o sistema *certo*?"): conferir se o sistema atende a necessidade real. Exemplo: o bibliotecário usa o sistema e confirma que R$ 2,00 por dia e teto de R$ 50,00 é a política que a biblioteca quer.
@@ -68,6 +80,8 @@ Um erro gera um defeito, e o defeito só vira falha quando aquele trecho é exec
 # 3. Parte 2 – Projeto de casos de teste
 
 ## 3.1 Particionamento de equivalência e valor limite
+
+As técnicas de partição de equivalência e de análise de valor limite seguem Myers, Sandler e Badgett (2011).
 
 **Campo 1 – dias de atraso na devolução (RN1, RN2, RN3).** Os "dias após o empréstimo" são contados a partir da data do empréstimo, e o atraso é esse valor menos 7.
 
@@ -134,7 +148,7 @@ Linguagem: **Python 3.14**, framework **pytest**, cobertura com **pytest-cov** (
 
 ## 4.1 Ciclos Red-Green-Refactor
 
-Cada etapa virou um commit no repositório git (`git log --oneline --reverse`, do mais antigo ao mais novo, apenas os commits de código):
+O ciclo Red-Green-Refactor segue a prática descrita por Beck (2002). Cada etapa virou um commit no repositório git (`git log --oneline --reverse`, do mais antigo ao mais novo, apenas os commits de código):
 
 ```
 365969d test: red - calculo de multa por atraso
@@ -267,6 +281,18 @@ Para o módulo da biblioteca eu usaria: **Cypress** para a interface (fluxo do b
 - Receber a data atual por um relógio injetável, para facilitar testes de datas.
 - Executar os testes automaticamente a cada commit (integração contínua).
 
-# 7. Anexos
+# 7. Referências
+
+BECK, Kent. **Test-Driven Development: By Example**. Boston: Addison-Wesley, 2002.
+
+COVERAGE.PY. **Coverage.py documentation**. Disponível em: https://coverage.readthedocs.io. Acesso em: 7 out. 2026.
+
+INTERNATIONAL SOFTWARE TESTING QUALIFICATIONS BOARD (ISTQB). **Certified Tester Foundation Level Syllabus**, v4.0. 2023.
+
+MYERS, Glenford J.; SANDLER, Corey; BADGETT, Tom. **The Art of Software Testing**. 3. ed. Hoboken: John Wiley & Sons, 2011.
+
+PYTEST. **pytest documentation**. Disponível em: https://docs.pytest.org. Acesso em: 7 out. 2026.
+
+# 8. Anexos
 
 Repositório: https://github.com/MvitorLS/testes-software-biblioteca (branch `feat/aproveitamento`), com `biblioteca.py`, `test_biblioteca.py`, o histórico git dos ciclos TDD e este relatório.
