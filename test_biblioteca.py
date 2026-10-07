@@ -98,3 +98,13 @@ def test_valores_limite_da_multa(dias_apos_emprestimo, esperado):
     emprestimo = date(2026, 1, 1)
     devolucao = emprestimo + timedelta(days=dias_apos_emprestimo)
     assert calcular_multa(emprestimo, devolucao) == esperado
+
+
+def test_multa_de_um_usuario_nao_bloqueia_outro():
+    biblioteca = Biblioteca()
+    biblioteca.adicionar_livro("L1", exemplares=1)
+    biblioteca.adicionar_livro("L2", exemplares=1)
+    biblioteca.emprestar("ana", "L1", date(2026, 10, 1))
+    biblioteca.devolver("ana", "L1", date(2026, 10, 11))
+    biblioteca.emprestar("bia", "L2", date(2026, 10, 12))
+    assert biblioteca.emprestimos_ativos("bia") == 1
