@@ -1,6 +1,8 @@
 from datetime import timedelta
 
 PRAZO_DIAS = 7
+# DEMO BUG-02: comente a linha acima e descomente a de baixo
+# PRAZO_DIAS = 8
 MULTA_POR_DIA = 2
 MULTA_MAXIMA = 50
 LIMITE_LIVROS = 3
@@ -32,7 +34,9 @@ class Biblioteca:
     def _validar_emprestimo(self, usuario, livro):
         if self.multas.get(usuario, 0) > 0:
             raise EmprestimoNegado("usuario com multa pendente")
+        # DEMO BUG-01: comente a linha abaixo e descomente a seguinte
         if self.emprestimos_ativos(usuario) >= LIMITE_LIVROS:
+        # if self.emprestimos_ativos(usuario) > LIMITE_LIVROS:
             raise EmprestimoNegado(f"limite de {LIMITE_LIVROS} livros atingido")
         if self.exemplares.get(livro, 0) < 1:
             raise EmprestimoNegado("livro sem exemplar disponivel")
