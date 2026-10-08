@@ -34,8 +34,30 @@ tdd() {
     git log --oneline --reverse --grep='^\(test\|feat\|refactor\):'
 }
 
+passo() {
+    local nome=$1 hash=$2 dir="$TMP/$1$2"
+    mkdir -p "$dir" && git archive "$hash" | tar -x -C "$dir"
+    printf '  %-9s %s  %s\n' "$nome" "$hash" "$(git log -1 --format=%s "$hash")"
+    (cd "$dir" && $PYTEST -q --tb=no 2>&1 | tail -1 | sed 's/^/            => /')
+}
+
+ciclo() {
+    titulo "CICLO $1: $2"
+    passo RED "$3"
+    passo GREEN "$4"
+    passo REFACTOR "$5"
+}
+
+tdd_ao_vivo() {
+    ciclo 1 "multa por atraso (RN1, RN2)" 365969d 030e541 a43b60d
+    ciclo 2 "teto da multa (RN3)" 9943459 30b13a2 2715822
+    ciclo 3 "regras de emprestimo (RN4, RN5, RN6)" 5f4a0ea c278c69 7c9f261
+    ciclo 4 "pagar multa e notificador (mock)" b46a015 3e6eb96 d6e7ccf
+}
+
 executar() {
     case "$1" in
+        7) tdd_ao_vivo ;;
         1) testes ;;
         2) cobertura ;;
         3) bug1 ;;
@@ -56,6 +78,7 @@ menu() {
  4 - Com erro 2: BUG-02 (prazo de 8 dias)
  5 - Ciclos TDD (commits Red/Green/Refactor)
  6 - Tudo em sequencia
+ 7 - Ao vivo: RED, GREEN e REFACTOR de cada ciclo
  0 - Sair
 ==============================================
 EOF
