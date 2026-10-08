@@ -1,7 +1,7 @@
 ---
 title: "Aproveitamento de Conhecimentos – Testes de Software"
 subtitle: "Módulo: Empréstimo e devolução de livros com multa por atraso"
-author: "Matheus Vitor — Bacharelado em Ciências da Computação"
+author: "Matheus Vitor Lourenço Schionato — Bacharelado em Ciências da Computação"
 date: "Disciplina: Testes de Software · Prof. Gerson Peres · Entrega: 08/10/2026"
 lang: pt-BR
 toc: true
