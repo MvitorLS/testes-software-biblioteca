@@ -2,7 +2,12 @@
 cd "$(dirname "$0")" || exit 1
 export PYTHONDONTWRITEBYTECODE=1
 RAIZ=$PWD
-PYTEST="$RAIZ/.venv/bin/pytest -p no:cacheprovider"
+if [ -x "$RAIZ/.venv/bin/pytest" ]; then PYBIN="$RAIZ/.venv/bin/pytest"; else PYBIN="pytest"; fi
+if ! command -v "$PYBIN" >/dev/null 2>&1; then
+    echo "pytest nao encontrado. Instale com: pip install pytest pytest-cov" >&2
+    exit 1
+fi
+PYTEST="$PYBIN -p no:cacheprovider"
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"; rm -f "$RAIZ/.coverage"' EXIT
 
